@@ -121,14 +121,7 @@ class LAAT(nn.Module):
             dim=-1  # Split static/rotary parts
         )
 
-        # KV processing
-        kv_combined = self.kv_down_proj(x)
-        kv_features, k_rot_raw = torch.split(
-            kv_combined,
-            [self.kv_rank, self.qk_rotary],
-            dim=-1  # Split features/rotary raw
-        )
-
+      
         # Apply rotary position embedding
         k_rot_expanded = k_rot_raw.unsqueeze(dim=2)
         q_rot_processed, k_rot_processed = self.rotary_embedding(q_rot, k_rot_expanded)
