@@ -34,27 +34,6 @@ def rotary_pos_emb_apply(q, k, cos_mat, sin_mat, unsqueeze_dim=2):
     return q_rot, k_rot
 
 
-class RotaryPositionEmbedding(nn.Module):
-    def __init__(self, emb_dim, max_sequence_len=1024):
-        super().__init__()
-        self.embedding_dim = emb_dim
-        self.max_len = max_sequence_len
-
-        frequency_steps = torch.arange(0, emb_dim, 2, dtype=torch.float32)
-        self.inverse_freq = 1.0 / (10000 ** (frequency_steps / emb_dim))  # Frequency scale
-
-        timesteps = torch.arange(self.max_len, dtype=torch.float32).unsqueeze(1)
-        freq_bands = timesteps @ self.inverse_freq.unsqueeze(0)
-        self.register_buffer("cos_vals", torch.cat((freq_bands.cos(), freq_bands.cos()), dim=-1), persistent=False)
-        self.register_buffer("sin_vals", torch.cat((freq_bands.sin(), freq_bands.sin()), dim=-1), persistent=False)
-
-    def forward(self, q, k):
-        seq_len_q = q.shape[1]
-        cos_slice = self.cos_vals[:seq_len_q].unsqueeze(0)  # Get cos for current seq
-        sin_slice = self.sin_vals[:seq_len_q].unsqueeze(0)  # Get sin for current seq
-        return rotary_pos_emb_apply(q, k, cos_slice, sin_slice)
-
-
 class LAAT(nn.Module):
     def __init__(self,
                  input_dim,
